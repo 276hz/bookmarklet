@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0b0d">
+  <meta name="description" content="Create, test, and export JavaScript bookmarklets in your browser.">
+  <title>Bookmarklet</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09090b;
+      --panel: #111114;
+      --panel-2: #17171b;
+      --line: #2b2b31;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --orange: #ff7a1a;
+      --orange-2: #ff9a4d;
+      --green: #5ee0a0;
+      --red: #ff7474;
+      --radius: 18px;
+      --shadow: 0 18px 55px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh; color: var(--text);
+      background: radial-gradient(ellipse at 75% -10%, rgba(255,122,26,.12), transparent 36%), var(--bg);
+      font: 14px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--orange-2); }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 28px 0 24px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+    .logo {
+      display:grid; place-items:center; width:42px; height:42px; border-radius:13px;
+      color:#17100a; background:linear-gradient(135deg,#ffb36f,var(--orange));
+      font-size:20px; font-weight:900; box-shadow:0 8px 24px rgba(255,122,26,.18);
+    }
+    .brand-title { margin:0; font-size:17px; letter-spacing:-.04em; }
+    .brand-sub { margin:2px 0 0; color:var(--muted); font-size:12px; }
+    .header-link { text-decoration:none; color:#d4d4d8; border:1px solid var(--line); padding:9px 13px; border-radius:10px; white-space:nowrap; }
+    .header-link:hover { border-color:#555; background:#151518; }
+    .hero { padding:34px 0 25px; }
+    .eyebrow { color:var(--orange-2); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.16em; }
+    h1 { font-size:clamp(28px,4vw,42px); line-height:1.1; letter-spacing:-.055em; margin:9px 0 10px; }
+    .hero p { color:var(--muted); max-width:680px; margin:0; font-size:14px; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr); gap:18px; align-items:start; padding-bottom:50px; }
+    .stack { display:grid; gap:18px; min-width:0; }
+    .card { min-width:0; border:1px solid var(--line); background:linear-gradient(160deg,rgba(255,255,255,.025),transparent 45%),var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .card-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 20px; border-bottom:1px solid rgba(255,255,255,.06); }
+    .card-head h2 { margin:0; font-size:14px; letter-spacing:-.015em; }
+    .step { color:var(--orange-2); font-size:11px; font-weight:800; letter-spacing:.08em; }
+    .card-body { padding:20px; }
+    .field { display:grid; gap:8px; margin-bottom:17px; }
+    .field:last-child { margin-bottom:0; }
+    label, .field-label { color:#e4e4e7; font-size:12px; font-weight:700; }
+    .hint { color:var(--muted); font-size:12px; font-weight:400; }
+    input[type="text"], textarea, select {
+      width:100%; color:var(--text); background:#0b0b0e; border:1px solid #33333a; border-radius:11px;
+      padding:11px 12px; outline:none; transition:border-color .16s,box-shadow .16s;
+    }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(255,122,26,.12); }
+    textarea { resize:vertical; min-height:220px; line-height:1.6; tab-size:2; font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; font-size:12px; }
+    .code-area { min-height:300px; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .btn {
+      display:inline-flex; justify-content:center; align-items:center; gap:8px; border:1px solid #393940;
+      border-radius:11px; padding:10px 14px; color:#f4f4f5; background:#1a1a1f; font-weight:750; font-size:12px;
+      transition:transform .14s,border-color .14s,background .14s; text-decoration:none;
+    }
+    .btn:hover { border-color:#666; background:#222228; }
+    .btn:active { transform:translateY(1px); }
+    .btn-primary { color:#1b1008; border-color:transparent; background:linear-gradient(135deg,#ffad67,var(--orange)); }
+    .btn-primary:hover { background:linear-gradient(135deg,#ffc18b,#ff8b35); border-color:transparent; }
+    .btn-danger { color:#ffb4b4; }
+    .btn-sm { padding:7px 10px; font-size:11px; }
+    .editor-toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+    .status { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:11px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+    .bookmarklet-preview {
+      display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px;
+      border:1px dashed rgba(255,122,26,.48); border-radius:13px; background:rgba(255,122,26,.055);
+    }
+    .bookmarklet-preview .preview-label { min-width:0; }
+    .preview-title { font-size:13px; font-weight:800; overflow-wrap:anywhere; }
+    .preview-caption { color:var(--muted); font-size:11px; margin-top:2px; }
+    .bookmarklet-link { display:inline-block; background:var(--orange); color:#1b1008; border-radius:8px; padding:8px 12px; font-weight:850; font-size:12px; text-decoration:none; white-space:nowrap; }
+    .bookmarklet-link:hover { background:#ffab69; }
+    .output { min-height:105px; }
+    .html-output { min-height:100px; }
+    .notice { border:1px solid rgba(255,122,26,.2); background:rgba(255,122,26,.055); color:#d4d4d8; border-radius:12px; padding:12px 13px; font-size:12px; }
+    .notice strong { color:#ffb36f; }
+    .notice.warning { border-color:rgba(255,116,116,.22); background:rgba(255,116,116,.055); }
+    .notice.warning strong { color:#ff9292; }
+    .examples { display:grid; gap:9px; }
+    .example { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px; background:var(--panel-2); border:1px solid #29292f; border-radius:12px; }
+    .example strong { display:block; font-size:12px; }
+    .example small { display:block; color:var(--muted); margin-top:3px; font-size:11px; }
+    .kbd { border:1px solid #3a3a42; background:#0b0b0e; color:#d4d4d8; border-radius:5px; padding:2px 5px; font:10px ui-monospace,monospace; }
+    .footer { padding:20px 0 32px; border-top:1px solid rgba(255,255,255,.07); color:var(--muted); font-size:11px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .toast { position:fixed; z-index:10; left:50%; bottom:22px; transform:translate(-50%,20px); opacity:0; pointer-events:none; background:#f4f4f5; color:#18181b; border-radius:10px; padding:11px 15px; font-weight:750; font-size:12px; box-shadow:0 10px 35px #0008; transition:opacity .2s,transform .2s; max-width:calc(100% - 28px); }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    .output-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+    .output-head label { margin:0; }
+    @media (max-width:850px) { .layout { grid-template-columns:1fr; } .right-column { grid-row:auto; } .code-area { min-height:250px; } }
+    @media (max-width:520px) {
+      .shell { width:min(100% - 22px,1180px); }
+      header { padding:17px 0; }
+      .logo { width:38px; height:38px; }
+      .brand-title { font-size:15px; }
+      .brand-sub { font-size:11px; }
+      .header-link { padding:8px 9px; font-size:11px; }
+      .hero { padding:25px 0 20px; }
+      .card-head { padding:15px; }
+      .card-body { padding:15px; }
+      .bookmarklet-preview { align-items:flex-start; flex-direction:column; }
+      .bookmarklet-link { white-space:normal; overflow-wrap:anywhere; max-width:100%; }
+      .row .btn { flex:1 1 auto; }
+      .example { align-items:flex-start; }
+      .example .btn { flex-shrink:0; }
+      textarea { font-size:12px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">↗</div>
+        <div>
+          <p class="brand-title">Bookmarklet <span style="color:var(--orange)">Studio</span></p>
+          <p class="brand-sub">A compact JavaScript bookmarklet workbench</p>
+        </div>
+      </div>
+      <a class="header-link" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">JavaScript docs ↗</a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="eyebrow">Build · Test · Export</div>
+      <h1>Your browser, <span style="color:var(--orange)">your tools.</span></h1>
+      <p>Turn a small JavaScript snippet into a bookmarklet you can save and run on pages you choose. Everything is processed locally in this page.</p>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="card">
+          <div class="card-head"><h2>Configure bookmarklet</h2><span class="step">01 / EDIT</span></div>
+          <div class="card-body">
+            <div class="field">
+              <label for="title-input">Bookmarklet name</label>
+              <input id="title-input" type="text" maxlength="100" value="My Bookmarklet" autocomplete="off" placeholder="e.g. Clean page">
+            </div>
+            <div class="field">
+              <div class="editor-toolbar">
+                <label for="code-textarea">JavaScript source</label>
+                <span class="status"><span class="dot"></span><span id="char-count">0 characters</span></span>
+              </div>
+              <textarea id="code-textarea" class="code-area" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-describedby="code-hint">alert('Hello from your bookmarklet!');</textarea>
+              <div class="row">
+                <button class="btn btn-primary" id="generate-btn" type="button">Generate bookmarklet ↗</button>
+                <button class="btn" id="format-btn" type="button">Minify whitespace</button>
+                <button class="btn btn-danger" id="clear-btn" type="button">Clear</button>
+              </div>
+              <p class="hint" id="code-hint">Paste JavaScript only — do not include a surrounding <code>&lt;script&gt;</code> tag.</p>
+            </div>
+            <div class="notice warning"><strong>Safety note:</strong> “Run source” executes the code you entered in this page. Bookmarklets run with the permissions of the page where you click them. Only run code you understand and trust.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>Try it in this page</h2><span class="step">02 / TEST</span></div>
+          <div class="card-body">
+            <p class="hint" style="margin-top:0">Test the source in this document's context. It may change this page or open browser prompts, depending on your code.</p>
+            <div class="row">
+              <button class="btn btn-primary" id="run-btn" type="button">Run source</button>
+              <button class="btn" id="reset-demo-btn" type="button">Reset demo text</button>
+            </div>
+            <div id="demo-area" class="notice" style="margin-top:14px"><strong>Demo area:</strong> your test code can interact with this page just like any other page content.</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>Quick-start examples</h2><span class="step">LIBRARY</span></div>
+          <div class="card-body">
+            <div class="examples">
+              <div class="example"><div><strong>Show page information</strong><small>Display the current page title and URL.</small></div><button class="btn btn-sm" data-example="info" type="button">Use example</button></div>
+              <div class="example"><div><strong>Readable page mode</strong><small>Temporarily improve text readability.</small></div><button class="btn btn-sm" data-example="readable" type="button">Use example</button></div>
+              <div class="example"><div><strong>Copy current URL</strong><small>Try copying the current page address.</small></div><button class="btn btn-sm" data-example="url" type="button">Use example</button></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="stack right-column">
+        <section class="card">
+          <div class="card-head"><h2>Bookmarklet preview</h2><span class="step">03 / SAVE</span></div>
+          <div class="card-body">
+            <div class="bookmarklet-preview">
+              <div class="preview-label"><div class="preview-title" id="preview-title">My Bookmarklet</div><div class="preview-caption">Drag to bookmarks where supported, or copy the code below.</div></div>
+              <a id="bookmarklet-a" class="bookmarklet-link" href="javascript:void(0)" draggable="true">My Bookmarklet</a>
+            </div>
+            <div class="notice" style="margin-top:14px">On desktop, you can usually drag the orange bookmarklet to your bookmarks bar. Some browsers block dragging JavaScript links; use the generated URL instead.</div>
+            <div class="field" style="margin-top:18px">
+              <div class="output-head"><label for="output-textarea">Generated bookmarklet URL</label><button class="btn btn-sm" id="copy-url-btn" type="button">Copy URL</button></div>
+              <textarea id="output-textarea" class="output" spellcheck="false" readonly placeholder="Your bookmarklet URL will appear here…"></textarea>
+            </div>
+            <div class="field" style="margin-top:17px">
+              <div class="output-head"><label for="htmlOuput-textarea">HTML anchor snippet</label><button class="btn btn-sm" id="copy-html-btn" type="button">Copy HTML</button></div>
+              <textarea id="htmlOuput-textarea" class="html-output" spellcheck="false" readonly placeholder="HTML link snippet will appear here…"></textarea>
+            </div>
+            <div class="row">
+              <button class="btn btn-primary" id="download-btn" type="button">Download .html</button>
+              <button class="btn" id="download-js-btn" type="button">Download source .js</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><h2>How to install</h2><span class="step">GUIDE</span></div>
+          <div class="card-body">
+            <ol style="padding-left:19px;margin:0;color:#d4d4d8">
+              <li style="padding:0 0 10px">Generate the bookmarklet, then copy its URL.</li>
+              <li style="padding:0 0 10px">Create a new bookmark in your browser and edit its URL/address field.</li>
+              <li style="padding:0 0 10px">Paste the complete URL beginning with <code>javascript:</code>, then save.</li>
+              <li style="padding:0">Open a page and click the bookmark to run it. Some sites and browsers restrict bookmarklets.</li>
+            </ol>
+            <div class="notice" style="margin-top:15px"><strong>iPhone / iPad:</strong> create a normal bookmark first, then edit its bookmark URL and paste the generated <code>javascript:</code> URL. The exact steps vary by browser; bookmarklets may be restricted in some contexts.</div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <footer class="footer"><span>Bookmarklet Studio · Runs locally in your browser</span><span>Review source before running unknown code.</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+      const $ = (id) => document.getElementById(id);
+      const titleInput = $('title-input');
+      const codeInput = $('code-textarea');
+      const output = $('output-textarea');
+      const htmlOutput = $('htmlOuput-textarea');
+      const bookmarkletLink = $('bookmarklet-a');
+      let toastTimer;
+
+      const examples = {
+        info: {
+          title: 'Page Information',
+          code: "alert('Title: ' + document.title + '\\nURL: ' + location.href);"
+        },
+        readable: {
+          title: 'Readable Page Mode',
+          code: "(() => {\\n  const id = 'bookmarklet-readable-mode';\\n  const old = document.getElementById(id);\\n  if (old) { old.remove(); return; }\\n  const style = document.createElement('style');\\n  style.id = id;\\n  style.textContent = 'body { max-width: 900px !important; margin: 30px auto !important; padding: 24px !important; font: 18px/1.8 Georgia, serif !important; } p, li { line-height: 1.8 !important; }';\\n  document.head.appendChild(style);\\n})();"
+        },
+        url: {
+          title: 'Copy Current URL',
+          code: "navigator.clipboard.writeText(location.href).then(() => alert('URL copied!')).catch(() => prompt('Copy this URL:', location.href));"
+        }
+      };
+
+      function showToast(message) {
+        const toast = $('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2300);
+      }
+
+      function getTitle() {
+        return titleInput.value.trim().slice(0, 100) || 'My Bookmarklet';
+      }
+
+      function buildBookmarklet(source) {
+        const trimmed = source.trim();
+        if (!trimmed) throw new Error('Enter some JavaScript first.');
+        // Keep source as JavaScript, wrap it in an immediately-invoked function,
+        // then encode the payload so punctuation and Unicode survive in the URL.
+        const wrapped = '(function(){\\n' + trimmed + '\\n})();';
+        return 'javascript:' + encodeURIComponent(wrapped).replace(/%20/g, '%20');
+      }
+
+      function generate(showMessage = true) {
+        try {
+          const title = getTitle();
+          const url = buildBookmarklet(codeInput.value);
+          titleInput.value = title;
+          $('preview-title').textContent = title;
+          bookmarkletLink.textContent = title;
+          bookmarkletLink.href = url;
+          bookmarkletLink.setAttribute('aria-label', 'Bookmarklet: ' + title);
+          output.value = url;
+          // HTML output is safely escaped so the snippet can be copied into markup.
+          htmlOutput.value = '<a href="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;') + '">' +
+            title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + '</a>';
+          if (showMessage) showToast('Bookmarklet generated.');
+          return true;
+        } catch (error) {
+          showToast(error.message || 'Could not generate bookmarklet.');
+          return false;
+        }
+      }
+
+      async function copyText(text, label) {
+        if (!text) { showToast('Generate the bookmarklet first.'); return; }
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            const ok = document.execCommand('copy');
+            temp.remove();
+            if (!ok) throw new Error('Clipboard permission unavailable');
+          }
+          showToast(label + ' copied to clipboard.');
+        } catch (_) {
+          showToast('Copy blocked by browser. Select the text and copy it manually.');
+        }
+      }
+
+      function downloadFile(filename, content, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      function updateCount() {
+        const n = codeInput.value.length;
+        $('char-count').textContent = n.toLocaleString() + (n === 1 ? ' character' : ' characters');
+      }
+
+      $('generate-btn').addEventListener('click', () => generate());
+      titleInput.addEventListener('input', () => {
+        $('preview-title').textContent = getTitle();
+        bookmarkletLink.textContent = getTitle();
+      });
+      codeInput.addEventListener('input', updateCount);
+
+      $('format-btn').addEventListener('click', () => {
+        // Conservative whitespace cleanup: trim outer whitespace only, never alter string literals.
+        codeInput.value = codeInput.value.trim();
+        updateCount();
+        showToast('Removed whitespace at the start and end.');
+      });
+
+      $('clear-btn').addEventListener('click', () => {
+        titleInput.value = 'My Bookmarklet';
+        codeInput.value = '';
+        output.value = '';
+        htmlOutput.value = '';
+        bookmarkletLink.href = 'javascript:void(0)';
+        bookmarkletLink.textContent = 'My Bookmarklet';
+        $('preview-title').textContent = 'My Bookmarklet';
+        updateCount();
+        showToast('Editor cleared.');
+      });
+
+      $('run-btn').addEventListener('click', () => {
+        const source = codeInput.value.trim();
+        if (!source) { showToast('Enter some JavaScript first.'); return; }
+        const confirmed = window.confirm('Run this JavaScript in the current page? Only continue if you trust the code.');
+        if (!confirmed) return;
+        try {
+          // Intentional execution feature, gated behind an explicit confirmation.
+          (new Function(source))();
+          showToast('Source executed. Check the page for results.');
+        } catch (error) {
+          showToast('Runtime error: ' + error.message);
+          console.error('Bookmarklet source error:', error);
+        }
+      });
+
+      $('reset-demo-btn').addEventListener('click', () => {
+        $('demo-area').innerHTML = '<strong>Demo area:</strong> your test code can interact with this page just like any other page content.';
+        showToast('Demo text reset.');
+      });
+
+      $('copy-url-btn').addEventListener('click', () => {
+        if (!output.value && !generate(false)) return;
+        copyText(output.value, 'Bookmarklet URL');
+      });
+      $('copy-html-btn').addEventListener('click', () => {
+        if (!htmlOutput.value && !generate(false)) return;
+        copyText(htmlOutput.value, 'HTML snippet');
+      });
+      $('download-btn').addEventListener('click', () => {
+        if (!generate(false)) return;
+        downloadFile('bookmarklet-' + getTitle().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '.html',
+          '<!doctype html>\\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' +
+          getTitle().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+          '</title></head><body><p>Drag this link to your bookmarks bar, or copy its link address.</p>' +
+          htmlOutput.value + '</body></html>', 'text/html;charset=utf-8');
+      });
+      $('download-js-btn').addEventListener('click', () => {
+        if (!codeInput.value.trim()) { showToast('Enter some JavaScript first.'); return; }
+        downloadFile('bookmarklet-source.js', codeInput.value, 'text/javascript;charset=utf-8');
+      });
+
+      document.querySelectorAll('[data-example]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const example = examples[button.dataset.example];
+          if (!example) return;
+          titleInput.value = example.title;
+          codeInput.value = example.code.replace(/\\\\n/g, '\\n');
+          updateCount();
+          generate(false);
+          showToast('Example loaded.');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      bookmarkletLink.addEventListener('click', (event) => {
+        // Prevent accidental execution while using the maker page.
+        event.preventDefault();
+        if (output.value) showToast('To test it, use “Run source”; the link is for saving as a bookmark.');
+        else showToast('Generate a bookmarklet first.');
+      });
+      bookmarkletLink.addEventListener('dragstart', (event) => {
+        if (!output.value) { event.preventDefault(); showToast('Generate a bookmarklet first.'); return; }
+        event.dataTransfer.setData('text/uri-list', output.value);
+        event.dataTransfer.setData('text/plain', output.value);
+      });
+
+      updateCount();
+      generate(false);
+    })();
+  </script>
+</body>
+</html>
